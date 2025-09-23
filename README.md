@@ -71,6 +71,7 @@ Install the command-line tools used in this workflow (examples — choose packag
 subfinder -dL target.txt -o subdomains.txt \
 && cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt \
 && dnsx -l subdomains.txt -o resolved.txt \
+&& sort -u resolved.txt -o resolved.txt \
 && httpx -l resolved_http.txt -silent -o http_alive.txt \
 && httpx -l resolved_http.txt -silent -status-code -title -tech-detect -o http_details.txt\
 && katana -list -silent http_alive.txt -o urls.txt \
@@ -273,6 +274,8 @@ cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt
 # 2️⃣ DNS resolution
 echo "[*] Running dnsx..."
 dnsx -l subdomains_final.txt -o resolved.txt
+# Deduplicate resolved hosts
+sort -u resolved.txt -o resolved.txt
 
 # 3️⃣ Prepare URLs with protocol
 echo "[*] Preparing URLs with https://"
