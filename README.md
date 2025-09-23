@@ -71,8 +71,8 @@ Install the command-line tools used in this workflow (examples — choose packag
 subfinder -dL target.txt -o subdomains.txt \
 && cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt \
 && dnsx -l subdomains.txt -o resolved.txt \
-&& grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx > http_alive.txt \
-&& katana -list http_alive.txt -o urls.txt \
+&& grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx -silent > http_alive.txt \
+&& katana -list -silent http_alive.txt -o urls.txt \
 && waybackurls -l resolved.txt > wayback.txt \
 && gau -l resolved.txt > gau.txt \
 && cat urls.txt wayback.txt gau.txt | sort -u > all_urls.txt \
@@ -99,7 +99,7 @@ dnsx -l subdomains.txt -o resolved.txt
 ### Probe live HTTP(S) services
 
 ```bash
-grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx > http_alive.txt
+grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx -silent > http_alive.txt
 ```
 
 ---
@@ -109,7 +109,7 @@ grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 http
 ### Crawl for endpoints/parameters
 
 ```bash
-katana -list http_alive.txt -o urls.txt
+katana -list -silent http_alive.txt -o urls.txt
 ```
 
 ### Historical URL collection
@@ -260,8 +260,8 @@ TARGET_FILE="${1:-target.txt}"
 subfinder -dL "${TARGET_FILE}" -o subdomains.txt
 cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt
 dnsx -l subdomains_final.txt -o resolved.txt
-grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx > http_alive.txt
-katana -list http_alive.txt -o urls.txt
+grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx -silent > http_alive.txt
+katana -list -silent http_alive.txt -o urls.txt
 waybackurls -l resolved.txt > wayback.txt
 gau -l resolved.txt > gau.txt
 cat urls.txt wayback.txt gau.txt | sort -u > all_urls.txt
