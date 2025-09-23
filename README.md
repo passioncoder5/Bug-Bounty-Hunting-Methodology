@@ -33,14 +33,14 @@ This repository documents an end-to-end automation workflow for reconnaissance, 
 
 - [Prerequisites](#prerequisites)
 - [Quick Workflow (one-line)](#quick-workflow-one-line)
-- [Reconnaissance & Discovery](#reconnaissance--discovery)
-- [Enumeration & URL Collection](#enumeration--url-collection)
+- [Reconnaissance & Discovery](#reconnaissance-and-discovery)
+- [Enumeration & URL Collection](#enumeration-and-url-collection)
 - [Automated Vulnerability Scanning (by category)](#automated-vulnerability-scanning-by-category)
 - [Output, Triage & Reporting](#output-triage--reporting)
 - [Best Practices & Notes](#best-practices--notes)
 - [Sample scripts](#sample-scripts)
 - [Tool matrix](#tool-matrix)
-- [Triage & Reporting Checklist](#triage--reporting-checklist)
+- [Triage & Reporting Checklist](#triage-and-reporting-checklist)
 - [Example usage](#example-usage)
 - [Final Notes](#final-notes)
 - [License](#license)
@@ -81,7 +81,7 @@ subfinder -dL target.txt -o subdomains.txt \
 
 ---
 
-## 1 — Reconnaissance & Discovery
+## 1 — Reconnaissance and Discovery
 
 ### Subdomain enumeration
 
@@ -103,7 +103,7 @@ httpx -l resolved.txt -o http_alive.txt
 
 ---
 
-## 2 — Enumeration & URL collection
+## 2 — Enumeration and URL collection
 
 ### Crawl for endpoints/parameters
 
@@ -209,7 +209,7 @@ Scan JavaScript and other files for secrets:
 ```bash
 # For trufflehog filesystem mode, make sure you've downloaded or fetched the JS files first
 # Example: download JS files list then run trufflehog
-trufflehog filesystem js_files.txt -o secrets_trufflehog.txt
+trufflehog filesystem js_files.txt --json > secrets_trufflehog.json
 ```
 
 ### Misconfigurations & Default Credentials
@@ -220,7 +220,7 @@ nuclei -l all_urls.txt -tags misconfiguration,default-credentials,exposures -o m
 
 ---
 
-## 4 — Output & Triage
+## 4 — Output and Triage
 
 - Each scanner writes structured output (`.txt`/`.json`) to the repo root.
 - Prioritize by severity (`critical` → `high` → `medium`) and by exploitability.
@@ -288,7 +288,7 @@ nuclei -l "${URLS_FILE}" -tags rce,command-injection -o rce_results.txt || true
 nuclei -l "${URLS_FILE}" -tags ssrf -o ssrf_results.txt || true
 
 # Secrets
-trufflehog filesystem js_files.txt -o secrets_trufflehog.txt || true
+trufflehog filesystem js_files.txt --json > secrets_trufflehog.json || true
 
 echo "Scanning finished. Check *_results.txt and nuclei_findings.txt"
 ```
