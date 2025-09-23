@@ -252,6 +252,7 @@ grep -Ei "critical|high" nuclei_findings.txt | sed 's/\\t/    /g'
 ### `run_recon.sh` (example)
 
 ```bash
+
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -275,9 +276,9 @@ dnsx -l subdomains_final.txt -o resolved.txt
 echo "[*] Preparing URLs with https://"
 sed 's|^|https://|' resolved.txt | sort -u > resolved_http.txt
 
-# 4️⃣ HTTP probing (parallel, only alive URLs)
+# 4️⃣ HTTP probing (using httpx properly)
 echo "[*] Probing live HTTP servers..."
-cat resolved_http.txt | xargs -n 1 -P 10 httpx 2>/dev/null | grep "^http" > http_alive.txt
+httpx -l resolved_http.txt -silent -status-code -title -tech-detect -o http_alive.txt
 
 # 5️⃣ Katana URL discovery
 echo "[*] Running katana for crawling..."
