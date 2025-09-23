@@ -278,7 +278,9 @@ sed 's|^|https://|' resolved.txt | sort -u > resolved_http.txt
 
 # 4️⃣ HTTP probing (using httpx properly)
 echo "[*] Probing live HTTP servers..."
-httpx -l resolved_http.txt -silent -status-code -title -tech-detect -o http_alive.txt
+# Save clean URLs for katana, and detailed output separately
+httpx -l resolved_http.txt -silent -o http_alive.txt
+httpx -l resolved_http.txt -silent -status-code -title -tech-detect -o http_details.txt
 
 # 5️⃣ Katana URL discovery
 echo "[*] Running katana for crawling..."
