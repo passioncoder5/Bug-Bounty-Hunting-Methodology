@@ -255,18 +255,60 @@ grep -Ei "critical|high" nuclei_findings.txt | sed 's/\\t/    /g'
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Target file (one domain per line)
 TARGET_FILE="${1:-target.txt}"
 
-subfinder -dL "${TARGET_FILE}" -o subdomains.txt
-cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt
+# -------------------------------
+# Step 1: Subdomain Enumeration
+# -------------------------------
+subfinder -dL "$TARGET_FILE" -o subdomains.txt
+
+# Include original targets and remove duplicates
+cat subdomains.txt "$TARGET_FILE" | sort -u > subdomains_final.txt
+
+# -------------------------------
+# Step 2: DNS Resolution
+# -------------------------------
 dnsx -l subdomains_final.txt -o resolved.txt
-grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx 2>/dev/null > http_alive.txt
-katana -list -silent http_alive.txt -o urls.txt
-waybackurls -l resolved.txt > wayback.txt
-gau -l resolved.txt > gau.txt
-cat urls.txt wayback.txt gau.txt | sort -u > all_urls.txt
-cat all_urls.txt | grep -Ei "\.js($|\?)" > js_files.txt
-echo "Recon done: all_urls.txt (and js_files.txt) created."
+
+# -------------------------------
+# Step 3: HTTP Probing (Alive Hosts)
+# -------------------------------
+# Add protocol to resolved hosts
+sed 's/^/http:\/\//' resolved.txt | sort -u > resolved_http.txt
+
+# Probe hosts and extract only alive URLs
+xargs -n 1 -P 10 httpx -status-code 2>/dev/null | awk '{print $1}' > http_alive.txt
+
+# -------------------------------
+# Step 4: URL Collection from Web Archives
+# -------------------------------
+# Katana scan
+katana -list http_alive.txt -o katana_urls.txt
+
+# WaybackURLs
+while read host; do
+    echo "$host" | waybackurls
+done < resolved.txt > wayback.txt
+
+# GAU (GetAllUrls)
+while read host; do
+    echo "$host" | gau
+done < resolved.txt > gau.txt
+
+# Combine all URLs, remove duplicates
+cat katana_urls.txt wayback.txt gau.txt | sort -u > all_urls.txt
+
+# Extract JavaScript files
+grep -Ei "\.js($|\?)" all_urls.txt > js_files.txt
+
+# -------------------------------
+# Done
+# -------------------------------
+echo "Recon completed!"
+echo "Alive hosts: http_alive.txt"
+echo "All collected URLs: all_urls.txt"
+echo "JavaScript files: js_files.txt"
 ```
 
 ### `run_scanning.sh` (example)
