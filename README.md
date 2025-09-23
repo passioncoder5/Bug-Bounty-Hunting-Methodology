@@ -71,7 +71,8 @@ Install the command-line tools used in this workflow (examples — choose packag
 subfinder -dL target.txt -o subdomains.txt \
 && cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt \
 && dnsx -l subdomains.txt -o resolved.txt \
-&& grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx 2>/dev/null > http_alive.txt \
+&& httpx -l resolved_http.txt -silent -o http_alive.txt \
+&& httpx -l resolved_http.txt -silent -status-code -title -tech-detect -o http_details.txt\
 && katana -list -silent http_alive.txt -o urls.txt \
 && waybackurls -l resolved.txt > wayback.txt \
 && gau -l resolved.txt > gau.txt \
@@ -99,7 +100,8 @@ dnsx -l subdomains.txt -o resolved.txt
 ### Probe live HTTP(S) services
 
 ```bash
-grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx 2>/dev/null > http_alive.txt
+httpx -l resolved_http.txt -silent -o http_alive.txt
+httpx -l resolved_http.txt -silent -status-code -title -tech-detect -o http_details.txt
 ```
 
 ---
@@ -109,7 +111,7 @@ grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 http
 ### Crawl for endpoints/parameters
 
 ```bash
-katana -list -silent http_alive.txt -o urls.txt
+katana -list http_alive.txt -o urls.txt
 ```
 
 ### Historical URL collection
