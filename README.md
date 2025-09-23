@@ -73,10 +73,10 @@ subfinder -dL target.txt -o subdomains.txt \
 && dnsx -l subdomains.txt -o resolved.txt \
 && sort -u resolved.txt -o resolved.txt \
 && httpx -l resolved_http.txt -silent -o http_alive.txt \
-&& httpx -l resolved_http.txt -silent -status-code -title -tech-detect -o http_details.txt\
+&& httpx -l resolved_http.txt -silent -status-code -title -tech-detect -o http_details.txt \
 && katana -list -silent http_alive.txt -o urls.txt \
-&& waybackurls -l resolved.txt > wayback.txt \
-&& gau -l resolved.txt > gau.txt \
+&& cat resolved.txt | xargs -n 50 -P 4 waybackurls | tee /dev/stderr | sort -u > wayback.txt \
+&& cat resolved.txt | xargs -n 50 -P 4 gau | tee /dev/stderr | sort -u > gau.txt \
 && cat urls.txt wayback.txt gau.txt | sort -u > all_urls.txt \
 && cat all_urls.txt | grep -Ei "\.js($|\?)" > js_files.txt \
 && nuclei -l all_urls.txt -t ~/nuclei-templates/ -severity critical,high,medium -o nuclei_findings.txt
@@ -118,8 +118,8 @@ katana -list http_alive.txt -o urls.txt
 ### Historical URL collection
 
 ```bash
-waybackurls -l resolved.txt > wayback.txt
-gau -l resolved.txt > gau.txt
+cat resolved.txt | xargs -n 50 -P 4 waybackurls | tee /dev/stderr | sort -u > wayback.txt
+cat resolved.txt | xargs -n 50 -P 4 gau | tee /dev/stderr | sort -u > gau.txt
 ```
 
 ### Consolidate and deduplicate
@@ -292,16 +292,10 @@ echo "[*] Running katana for crawling..."
 katana -list http_alive.txt -o urls.txt
 
 # 6️⃣ Wayback URLs
-echo "[*] Fetching Wayback URLs..."
-while read host; do
-    waybackurls "$host"
-done < resolved.txt > wayback.txt
+cat resolved.txt | xargs -n 50 -P 4 waybackurls | tee /dev/stderr | sort -u > wayback.txt
 
 # 7️⃣ GAU (GetAllUrls)
-echo "[*] Fetching GAU URLs..."
-while read host; do
-    gau "$host"
-done < resolved.txt > gau.txt
+cat resolved.txt | xargs -n 50 -P 4 gau | tee /dev/stderr | sort -u > gau.txt
 
 # 8️⃣ Combine all URLs
 echo "[*] Combining all URLs..."
