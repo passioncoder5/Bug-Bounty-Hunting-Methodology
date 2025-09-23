@@ -71,7 +71,7 @@ Install the command-line tools used in this workflow (examples — choose packag
 subfinder -dL target.txt -o subdomains.txt \
 && cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt \
 && dnsx -l subdomains.txt -o resolved.txt \
-&& grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx -silent > http_alive.txt \
+&& grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx 2>/dev/null > http_alive.txt \
 && katana -list -silent http_alive.txt -o urls.txt \
 && waybackurls -l resolved.txt > wayback.txt \
 && gau -l resolved.txt > gau.txt \
@@ -99,7 +99,7 @@ dnsx -l subdomains.txt -o resolved.txt
 ### Probe live HTTP(S) services
 
 ```bash
-grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx -silent > http_alive.txt
+grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx 2>/dev/null > http_alive.txt
 ```
 
 ---
@@ -260,7 +260,7 @@ TARGET_FILE="${1:-target.txt}"
 subfinder -dL "${TARGET_FILE}" -o subdomains.txt
 cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt
 dnsx -l subdomains_final.txt -o resolved.txt
-grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx -silent > http_alive.txt
+grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx 2>/dev/null > http_alive.txt
 katana -list -silent http_alive.txt -o urls.txt
 waybackurls -l resolved.txt > wayback.txt
 gau -l resolved.txt > gau.txt
