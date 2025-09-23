@@ -255,60 +255,57 @@ grep -Ei "critical|high" nuclei_findings.txt | sed 's/\\t/    /g'
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Target file (one domain per line)
+# Input file with targets
 TARGET_FILE="${1:-target.txt}"
 
-# -------------------------------
-# Step 1: Subdomain Enumeration
-# -------------------------------
-subfinder -dL "$TARGET_FILE" -o subdomains.txt
+echo "[*] Starting Recon for targets in $TARGET_FILE"
 
-# Include original targets and remove duplicates
-cat subdomains.txt "$TARGET_FILE" | sort -u > subdomains_final.txt
+# 1️⃣ Subdomain enumeration
+echo "[*] Running subfinder..."
+subfinder -dL "${TARGET_FILE}" -o subdomains.txt
 
-# -------------------------------
-# Step 2: DNS Resolution
-# -------------------------------
+# Include original targets to ensure nothing is missed
+cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt
+
+# 2️⃣ DNS resolution
+echo "[*] Running dnsx..."
 dnsx -l subdomains_final.txt -o resolved.txt
 
-# -------------------------------
-# Step 3: HTTP Probing (Alive Hosts)
-# -------------------------------
-# Add protocol to resolved hosts
-sed 's/^/http:\/\//' resolved.txt | sort -u > resolved_http.txt
+# 3️⃣ Prepare URLs with protocol
+echo "[*] Preparing URLs with https://"
+sed 's|^|https://|' resolved.txt | sort -u > resolved_http.txt
 
-# Probe hosts and extract only alive URLs
-xargs -n 1 -P 10 httpx -status-code 2>/dev/null | awk '{print $1}' > http_alive.txt
+# 4️⃣ HTTP probing (parallel, only alive URLs)
+echo "[*] Probing live HTTP servers..."
+cat resolved_http.txt | xargs -n 1 -P 10 httpx 2>/dev/null | grep "^http" > http_alive.txt
 
-# -------------------------------
-# Step 4: URL Collection from Web Archives
-# -------------------------------
-# Katana scan
-katana -list http_alive.txt -o katana_urls.txt
+# 5️⃣ Katana URL discovery
+echo "[*] Running katana for crawling..."
+katana -list http_alive.txt -o urls.txt
 
-# WaybackURLs
+# 6️⃣ Wayback URLs
+echo "[*] Fetching Wayback URLs..."
 while read host; do
-    echo "$host" | waybackurls
+    waybackurls "$host"
 done < resolved.txt > wayback.txt
 
-# GAU (GetAllUrls)
+# 7️⃣ GAU (GetAllUrls)
+echo "[*] Fetching GAU URLs..."
 while read host; do
-    echo "$host" | gau
+    gau "$host"
 done < resolved.txt > gau.txt
 
-# Combine all URLs, remove duplicates
-cat katana_urls.txt wayback.txt gau.txt | sort -u > all_urls.txt
+# 8️⃣ Combine all URLs
+echo "[*] Combining all URLs..."
+cat urls.txt wayback.txt gau.txt | sort -u > all_urls.txt
 
-# Extract JavaScript files
+# 9️⃣ Extract JavaScript files
+echo "[*] Extracting JS files..."
 grep -Ei "\.js($|\?)" all_urls.txt > js_files.txt
 
-# -------------------------------
-# Done
-# -------------------------------
-echo "Recon completed!"
-echo "Alive hosts: http_alive.txt"
-echo "All collected URLs: all_urls.txt"
-echo "JavaScript files: js_files.txt"
+echo "[✅] Recon complete!"
+echo "All URLs: all_urls.txt"
+echo "JS files: js_files.txt"
 ```
 
 ### `run_scanning.sh` (example)
