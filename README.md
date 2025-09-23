@@ -70,7 +70,7 @@ Install the command-line tools used in this workflow (examples — choose packag
 # Discover -> Resolve -> Probe -> Crawl -> Collect -> Scan
 subfinder -dL target.txt -o subdomains.txt \
 && dnsx -l subdomains.txt -o resolved.txt \
-&& httpx -list resolved.txt -o http_alive.txt \
+&& cat resolved.txt | httpx -o http_alive.txt \
 && katana -list http_alive.txt -o urls.txt \
 && waybackurls -l resolved.txt > wayback.txt \
 && gau -l resolved.txt > gau.txt \
@@ -98,7 +98,7 @@ dnsx -l subdomains.txt -o resolved.txt
 ### Probe live HTTP(S) services
 
 ```bash
-httpx -list resolved.txt -o http_alive.txt
+cat resolved.txt | httpx -o http_alive.txt
 ```
 
 ---
@@ -258,7 +258,7 @@ TARGET_FILE="${1:-target.txt}"
 
 subfinder -dL "${TARGET_FILE}" -o subdomains.txt
 dnsx -l subdomains.txt -o resolved.txt
-httpx -list resolved.txt -o http_alive.txt
+cat resolved.txt | httpx -o http_alive.txt
 katana -list http_alive.txt -o urls.txt
 waybackurls -l resolved.txt > wayback.txt
 gau -l resolved.txt > gau.txt
