@@ -143,7 +143,9 @@ nuclei -l all_urls.txt -t ~/nuclei-templates/ -severity critical,high,medium -o 
 Primary:
 
 ```bash
-ghauri -l all_urls.txt --batch -o sqli_results.txt
+while read url; do
+    ghauri -u "$url" --batch
+done < "${URLS_FILE}" > sqli_results.txt || true
 ```
 
 Deeper scan (slower):
@@ -277,7 +279,9 @@ URLS_FILE="${1:-all_urls.txt}"
 nuclei -l "${URLS_FILE}" -t ~/nuclei-templates/ -severity critical,high,medium -o nuclei_findings.txt
 
 # Category scans
-ghauri -l "${URLS_FILE}" --batch -o sqli_results.txt || true
+while read url; do
+    ghauri -u "$url" --batch
+done < "${URLS_FILE}" > sqli_results.txt || true
 dalfox file "${URLS_FILE}" -o xss_results.txt || true
 nuclei -l "${URLS_FILE}" -tags lfi -o lfi_results.txt || true
 nuclei -l "${URLS_FILE}" -tags rce,command-injection -o rce_results.txt || true
