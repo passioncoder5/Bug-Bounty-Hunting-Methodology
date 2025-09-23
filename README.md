@@ -15,6 +15,7 @@ This repository documents an end-to-end automation workflow for reconnaissance, 
 **High-level flow:** Reconnaissance → Discovery → Enumeration → Automated Scanning → Triage & Reporting
 
 ```mermaid
+    flowchart TD
     A[Reconnaissance] --> B[Discovery]
     B --> C[Enumeration]
     C --> D[Automated Vulnerability Scanning]
