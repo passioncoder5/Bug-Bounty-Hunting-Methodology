@@ -69,8 +69,9 @@ Install the command-line tools used in this workflow (examples — choose packag
 ```bash
 # Discover -> Resolve -> Probe -> Crawl -> Collect -> Scan
 subfinder -dL target.txt -o subdomains.txt \
+&& cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt \
 && dnsx -l subdomains.txt -o resolved.txt \
-&& cat resolved.txt | httpx > http_alive.txt \
+&& grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx > http_alive.txt \
 && katana -list http_alive.txt -o urls.txt \
 && waybackurls -l resolved.txt > wayback.txt \
 && gau -l resolved.txt > gau.txt \
@@ -98,7 +99,7 @@ dnsx -l subdomains.txt -o resolved.txt
 ### Probe live HTTP(S) services
 
 ```bash
-cat resolved.txt | httpx > http_alive.txt
+grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx > http_alive.txt
 ```
 
 ---
@@ -257,8 +258,9 @@ set -euo pipefail
 TARGET_FILE="${1:-target.txt}"
 
 subfinder -dL "${TARGET_FILE}" -o subdomains.txt
-dnsx -l subdomains.txt -o resolved.txt
-cat resolved.txt | httpx > http_alive.txt
+cat subdomains.txt "${TARGET_FILE}" | sort -u > subdomains_final.txt
+dnsx -l subdomains_final.txt -o resolved.txt
+grep -vE '^\s*$' resolved.txt | sort -u | sed 's/^/http:\/\//' | xargs -n 1 httpx > http_alive.txt
 katana -list http_alive.txt -o urls.txt
 waybackurls -l resolved.txt > wayback.txt
 gau -l resolved.txt > gau.txt
