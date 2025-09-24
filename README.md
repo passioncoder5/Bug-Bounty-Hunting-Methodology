@@ -317,23 +317,56 @@ echo "JS files: js_files.txt"
 set -euo pipefail
 
 URLS_FILE="${1:-all_urls.txt}"
+TEMPLATES_PATH="${TEMPLATES_PATH:-$HOME/.local/nuclei-templates}"
 
-# Nuclei scan (broad)
-nuclei -l "${URLS_FILE}" -t ~/nuclei-templates/ -severity critical,high,medium -o nuclei_findings.txt
+# -----------------------------
+# 1️⃣ Remove duplicates & prep URLs
+# -----------------------------
+echo "[*] Removing duplicate URLs..."
+sort -u "$URLS_FILE" -o "$URLS_FILE"
 
-# Category scans
-while read url; do
-    ghauri -u "$url" --batch
-done < "${URLS_FILE}" > sqli_results.txt || true
-dalfox file "${URLS_FILE}" -o xss_results.txt || true
-nuclei -l "${URLS_FILE}" -tags lfi -o lfi_results.txt || true
-nuclei -l "${URLS_FILE}" -tags rce,command-injection -o rce_results.txt || true
-nuclei -l "${URLS_FILE}" -tags ssrf -o ssrf_results.txt || true
+# -----------------------------
+# 2️⃣ Nuclei broad scan
+# -----------------------------
+echo "[*] Running Nuclei broad scan..."
+nuclei -c 50 -l "$URLS_FILE" -t "$TEMPLATES_PATH" -severity critical,high,medium -o nuclei_findings.txt || true
 
-# Secrets
-trufflehog filesystem js_files.txt --json > secrets_trufflehog.json || true
+# -----------------------------
+# 3️⃣ SQLi scan with Ghauri (parallel)
+# -----------------------------
+echo "[*] Running Ghauri SQLi scan..."
+xargs -a "$URLS_FILE" -n 1 -P 20 -I {} ghauri -u "{}" --batch >> sqli_results.txt || true
 
-echo "Scanning finished. Check *_results.txt and nuclei_findings.txt"
+# -----------------------------
+# 4️⃣ XSS scan with Dalfox
+# -----------------------------
+echo "[*] Running Dalfox XSS scan..."
+dalfox file "$URLS_FILE" --threads 50 -o xss_results.txt || true
+
+# -----------------------------
+# 5️⃣ Category-specific Nuclei scans
+# -----------------------------
+echo "[*] Running Nuclei LFI scan..."
+nuclei -c 50 -l "$URLS_FILE" -tags lfi -t "$TEMPLATES_PATH" -o lfi_results.txt || true
+
+echo "[*] Running Nuclei RCE/Command Injection scan..."
+nuclei -c 50 -l "$URLS_FILE" -tags rce,command-injection -t "$TEMPLATES_PATH" -o rce_results.txt || true
+
+echo "[*] Running Nuclei SSRF scan..."
+nuclei -c 50 -l "$URLS_FILE" -tags ssrf -t "$TEMPLATES_PATH" -o ssrf_results.txt || true
+
+# -----------------------------
+# 6️⃣ Secrets scan with Trufflehog
+# -----------------------------
+if [[ -f js_files.txt ]]; then
+    echo "[*] Running Trufflehog secrets scan..."
+    trufflehog filesystem js_files.txt --json -o secrets_trufflehog.json || true
+else
+    echo "[!] js_files.txt not found. Skipping Trufflehog scan."
+fi
+
+echo "[✅] Scanning finished!"
+echo "Check results: nuclei_findings.txt, sqli_results.txt, xss_results.txt, lfi_results.txt, rce_results.txt, ssrf_results.txt, secrets_trufflehog.json"
 ```
 
 ---
