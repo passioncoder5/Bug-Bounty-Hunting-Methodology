@@ -329,7 +329,7 @@ sort -u "$URLS_FILE" -o "$URLS_FILE"
 # 2️⃣ Nuclei broad scan
 # -----------------------------
 echo "[*] Running Nuclei broad scan..."
-nuclei -c 50 -l "$URLS_FILE" -t "$TEMPLATES_PATH" -severity critical,high,medium -o nuclei_findings.txt || true
+nuclei -c 100 -l "$URLS_FILE" -t "$TEMPLATES_PATH" -severity critical,high,medium -o nuclei_findings.txt || true
 
 # -----------------------------
 # 3️⃣ SQLi scan with Ghauri (parallel)
@@ -347,13 +347,13 @@ dalfox file "$URLS_FILE" --threads 50 -o xss_results.txt || true
 # 5️⃣ Category-specific Nuclei scans
 # -----------------------------
 echo "[*] Running Nuclei LFI scan..."
-nuclei -c 50 -l "$URLS_FILE" -tags lfi -t "$TEMPLATES_PATH" -o lfi_results.txt || true
+nuclei -c 100 -l "$URLS_FILE" -tags lfi -t "$TEMPLATES_PATH" -o lfi_results.txt || true
 
 echo "[*] Running Nuclei RCE/Command Injection scan..."
-nuclei -c 50 -l "$URLS_FILE" -tags rce,command-injection -t "$TEMPLATES_PATH" -o rce_results.txt || true
+nuclei -c 100 -l "$URLS_FILE" -tags rce,command-injection -t "$TEMPLATES_PATH" -o rce_results.txt || true
 
 echo "[*] Running Nuclei SSRF scan..."
-nuclei -c 50 -l "$URLS_FILE" -tags ssrf -t "$TEMPLATES_PATH" -o ssrf_results.txt || true
+nuclei -c 100 -l "$URLS_FILE" -tags ssrf -t "$TEMPLATES_PATH" -o ssrf_results.txt || true
 
 # -----------------------------
 # 6️⃣ Secrets scan with Trufflehog
