@@ -1,4 +1,4 @@
-# 🕵️ Bug Bounty Hunting Methodology (2025)
+# 🕵️ Bug Bounty Hunting Methodology
 
 > A streamlined, **fully automated** bug-bounty methodology focused on:
 >
